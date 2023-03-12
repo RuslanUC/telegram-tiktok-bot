@@ -1,0 +1,7 @@
+name = "tg-tiktok-bot"
+main = "src/index.js"
+compatibility_date = "2023-03-12"
+usage_model = "bundled"
+
+[vars]
+SECRET_KEY = "123456789"
