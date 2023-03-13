@@ -1,5 +1,5 @@
 import {escapeStr, getVideoUrl} from './utils';
-import {deleteMessage, sendImages, sendMessage, sendVideo} from './tg_api'
+import {deleteMessage, sendChatAction, sendImages, sendMessage, sendVideo} from './tg_api'
 
 export default {
     async fetch(request, env, context) {
@@ -11,6 +11,7 @@ const DELETE_ORIGINAL_MESSAGE = true; // Delete message with tiktok link(s) afte
 
 async function ttHandler(token, message) {
     const chatId = message.chat.id;
+    const fromId = message.from.id;
     const messageId = message.message_id;
     if (!message.text) return;
 
@@ -18,6 +19,8 @@ async function ttHandler(token, message) {
     if (!tiktok_links) return;
 
     console.log(`Got ${tiktok_links.length} tt links.`);
+    let action_resp = (await sendChatAction(token, chatId, "upload_video")).json(); // Send "uploading video" action
+    if(!action_resp.ok && action_resp.error_code === 401) return; // Invalid token provided
     for (let link of tiktok_links) {
         console.log(`Downloading ${link}...`);
         if (!link) continue;
@@ -43,12 +46,16 @@ async function ttHandler(token, message) {
             continue;
         }
 
-        let caption = `Sent by: [${escapeStr(message.from.first_name)}](tg://user?id=${message.from.id})\n` +
-            `[Original link](${escapeStr(link)})`;
+        let caption = "";
+        if(fromId !== chatId)
+            caption += `Sent by: [${escapeStr(message.from.first_name)}](tg://user?id=${fromId})\n`;
+
+        caption += `[Link](${escapeStr(link)})`;
         if (tikwm_resp.data.title)
             caption += `\n\n||${escapeStr(tikwm_resp.data.title)}||`;
 
         console.log(`Sending video/audio to telegram...`);
+        await sendChatAction(token, chatId, "upload_video");
         let tg_req = await sendVideo(token, chatId, videoUrl, caption);
         let tg_resp = await tg_req.json();
         if (!tg_resp.ok) {
@@ -60,6 +67,7 @@ async function ttHandler(token, message) {
         }
 
         if (tikwm_resp.data.images) {
+            await sendChatAction(token, chatId, "upload_photo");
             console.log(`Sending images to telegram...`);
             let images = tikwm_resp.data.images;
             for (let i = 0; i < images.length; i += 10) {
@@ -67,7 +75,7 @@ async function ttHandler(token, message) {
             }
         }
 
-        if (DELETE_ORIGINAL_MESSAGE && tg_resp.ok) await deleteMessage(token, chatId, messageId);
+        if (DELETE_ORIGINAL_MESSAGE && tg_resp.ok && fromId !== chatId) await deleteMessage(token, chatId, messageId);
     }
 }
 

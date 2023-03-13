@@ -28,3 +28,7 @@ export async function sendImages(token, chat_id, images, caption) {
 export async function deleteMessage(token, chat_id, message_id) {
     return await fetch(`https://api.telegram.org/bot${token}/deleteMessage?chat_id=${chat_id}&message_id=${message_id}`);
 }
+
+export async function sendChatAction(token, chat_id, action) {
+    return await fetch(`https://api.telegram.org/bot${token}/sendChatAction?chat_id=${chat_id}&action=${action}`);
+}
