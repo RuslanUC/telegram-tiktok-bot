@@ -19,7 +19,12 @@ async function ttHandler(token, message) {
     if (!tiktok_links) return;
 
     console.log(`Got ${tiktok_links.length} tt links.`);
-    let action_resp = (await sendChatAction(token, chatId, "upload_video")).json(); // Send "uploading video" action
+    let action_resp = await (await sendChatAction({
+        token: token,
+        chat_id: chatId,
+        action: "upload_video",
+        message_thread_id: message.message_thread_id
+    })).json(); // Send "uploading video" action
     if(!action_resp.ok && action_resp.error_code === 401) return; // Invalid token provided
     for (let link of tiktok_links) {
         console.log(`Downloading ${link}...`);
@@ -42,7 +47,13 @@ async function ttHandler(token, message) {
 
         const videoUrl = await getVideoUrl(tikwm_resp);
         if (!videoUrl) {
-            await sendMessage(token, chatId, "Video is over 20 MB and cannot be uploaded.", messageId);
+            await sendMessage({
+                token: token,
+                chat_id: chatId,
+                text: "Video is over 20 MB and cannot be uploaded.",
+                reply_to: messageId,
+                message_thread_id: message.message_thread_id
+            });
             continue;
         }
 
@@ -55,27 +66,60 @@ async function ttHandler(token, message) {
             caption += `\n\n||${escapeStr(tikwm_resp.data.title)}||`;
 
         console.log(`Sending video/audio to telegram...`);
-        await sendChatAction(token, chatId, "upload_video");
-        let tg_req = await sendVideo(token, chatId, videoUrl, caption);
+        await sendChatAction({
+            token: token,
+            chat_id: chatId,
+            action: "upload_video",
+            message_thread_id: message.message_thread_id
+        });
+        let tg_req = await sendVideo({
+            token: token,
+            chat_id: chatId,
+            video: videoUrl,
+            caption: caption,
+            message_thread_id: message.message_thread_id
+        });
         let tg_resp = await tg_req.json();
         if (!tg_resp.ok) {
             console.error(`Error: ${tg_resp.description} (${JSON.stringify(tg_resp)})`);
             if (tg_resp.error_code !== 401)
-                await sendMessage(token, chatId, "Error: " + tg_resp.description, messageId);
+                await sendMessage({
+                    token: token,
+                    chat_id: chatId,
+                    text: `Error: ${tg_resp.description}`,
+                    reply_to: messageId,
+                    message_thread_id: message.message_thread_id
+                });
             else
                 return; // Invalid token provided
         }
 
         if (tikwm_resp.data.images) {
-            await sendChatAction(token, chatId, "upload_photo");
+            await sendChatAction({
+                token: token,
+                chat_id: chatId,
+                action: "upload_photo",
+                message_thread_id: message.message_thread_id
+            });
             console.log(`Sending images to telegram...`);
             let images = tikwm_resp.data.images;
             for (let i = 0; i < images.length; i += 10) {
-                await sendImages(token, chatId, images.slice(i, i + 10), caption);
+                await sendImages({
+                    token: token,
+                    chat_id: chatId,
+                    images: images.slice(i, i + 10),
+                    caption: caption,
+                    message_thread_id: message.message_thread_id
+                });
             }
         }
 
-        if (DELETE_ORIGINAL_MESSAGE && tg_resp.ok && fromId !== chatId) await deleteMessage(token, chatId, messageId);
+        if (DELETE_ORIGINAL_MESSAGE && tg_resp.ok && fromId !== chatId)
+            await deleteMessage({
+                token: token,
+                chat_id: chatId,
+                message_id: messageId
+            });
     }
 }
 

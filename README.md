@@ -19,4 +19,4 @@ wrangler publish
 ```
 6. [Create telegram bot](https://core.telegram.org/bots/features#botfather)
 7. Set bot webhook. Replace <BOT_TOKEN> with your bot token, <WORKER_URL> with CF worker url, <SECRET_KEY> with secret key in this link and open it: `https://api.telegram.org/bot<BOT_TOKEN>/setWebhook?url=https://<WORKER_URL>/<BOT_TOKEN>/tt_bot&allowed_updates=[%22message%22]&secret_token=<SECRET_KEY>`
-8. Done! Now you can send tiktok link to your bot and it should respond with video
+8. Done! Now you can send TikTok link to your bot, and it should respond with video
