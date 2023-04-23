@@ -21,3 +21,14 @@ export async function getVideoUrl(tikwm_resp) {
         console.log(`[${form}] Content-Length > 20mb.`);
     }
 }
+
+export async function checkSecretKey(key, env, token) {
+    if(key.startsWith("ttbot_")) {
+        let hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(env.SECRET_KEY+token))
+        let hashArray = Array.from(new Uint8Array(hashBuffer))
+        let hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex === key.substring(6);
+    } else {
+        return key === env.SECRET_KEY;
+    }
+}

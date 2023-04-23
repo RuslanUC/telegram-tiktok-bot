@@ -5,6 +5,14 @@ Bot that downloads tiktok videos (via tikwm) to telegram. Working on [Cloudflare
 #### Demo: [@tiktok_chat_yep_bot](https://t.me/tiktok_chat_yep_bot)
 
 ## Installation
+
+<details>
+  <summary>Install bot on already existing environment.</summary>
+  You can install your bot to already existing environment by executing <code>/addbot</code> command with token in <a href="https://t.me/tiktok_chat_yep_bot">@tiktok_chat_yep_bot</a>.
+  <br>For example: <code>/addbot 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11</code>.
+  <br><b>Warning: you will not be able to use the bot for your own purposes until you uninstall it: <code>/delbot 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11</code></b>
+</details>
+
 1. Create cloudflare account
 2. Install [Wrangler](https://developers.cloudflare.com/workers/wrangler/install-and-update/#install-wrangler-globally)
 3. Clone repository

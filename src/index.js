@@ -1,4 +1,4 @@
-import {escapeStr, getVideoUrl} from './utils';
+import {checkSecretKey, escapeStr, getVideoUrl} from './utils';
 import {deleteMessage, sendChatAction, sendImages, sendMessage, sendVideo} from './tg_api'
 
 export default {
@@ -131,10 +131,6 @@ async function handleRequest(request, env, ctx) {
     if (!contentType.includes('application/json')) {
         return new Response("", {status: 400});
     }
-    const secret = request.headers.get('X-Telegram-Bot-Api-Secret-Token') || '';
-    if (secret !== env.SECRET_KEY) {
-        return new Response("", {status: 401});
-    }
     let json = await request.json();
     if (!json.message)
         return new Response("");
@@ -143,6 +139,10 @@ async function handleRequest(request, env, ctx) {
 
     const pattern = new URLPattern({ pathname: '/:bot_token/tt_bot' });
     const req = pattern.exec(request.url).pathname.groups;
+    const secret = request.headers.get('X-Telegram-Bot-Api-Secret-Token') || '';
+    if (!await checkSecretKey(secret, env, req.bot_token)) {
+        return new Response("", {status: 401});
+    }
 
     ctx.waitUntil(ttHandler(req.bot_token, json.message));
     return new Response("");
