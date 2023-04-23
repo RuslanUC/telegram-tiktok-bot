@@ -23,7 +23,7 @@ async function ttHandler(token, message) {
         token: token,
         chat_id: chatId,
         action: "upload_video",
-        message_thread_id: message.message_thread_id
+        message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
     })).json(); // Send "uploading video" action
     if(!action_resp.ok && action_resp.error_code === 401) return; // Invalid token provided
     for (let link of tiktok_links) {
@@ -52,7 +52,7 @@ async function ttHandler(token, message) {
                 chat_id: chatId,
                 text: "Video is over 20 MB and cannot be uploaded.",
                 reply_to: messageId,
-                message_thread_id: message.message_thread_id
+                message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
             });
             continue;
         }
@@ -70,14 +70,14 @@ async function ttHandler(token, message) {
             token: token,
             chat_id: chatId,
             action: "upload_video",
-            message_thread_id: message.message_thread_id
+            message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
         });
         let tg_req = await sendVideo({
             token: token,
             chat_id: chatId,
             video: videoUrl,
             caption: caption,
-            message_thread_id: message.message_thread_id
+            message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
         });
         let tg_resp = await tg_req.json();
         if (!tg_resp.ok) {
@@ -88,7 +88,7 @@ async function ttHandler(token, message) {
                     chat_id: chatId,
                     text: `Error: ${tg_resp.description}`,
                     reply_to: messageId,
-                    message_thread_id: message.message_thread_id
+                    message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
                 });
             else
                 return; // Invalid token provided
@@ -99,7 +99,7 @@ async function ttHandler(token, message) {
                 token: token,
                 chat_id: chatId,
                 action: "upload_photo",
-                message_thread_id: message.message_thread_id
+                message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
             });
             console.log(`Sending images to telegram...`);
             let images = tikwm_resp.data.images;
@@ -109,7 +109,7 @@ async function ttHandler(token, message) {
                     chat_id: chatId,
                     images: images.slice(i, i + 10),
                     caption: caption,
-                    message_thread_id: message.message_thread_id
+                    message_thread_id: message.is_topic_message ? message.message_thread_id : undefined
                 });
             }
         }
