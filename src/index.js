@@ -123,6 +123,41 @@ async function ttHandler(token, message) {
     }
 }
 
+async function command_start(token, message) {
+    await sendMessage({
+        token: token,
+        chat_id: message.chat.id,
+        text: "Hi! I am TikTok Bot!\nSend me tiktok link, and I'll send you video."
+    });
+}
+
+async function command_help(token, message) {
+    await sendMessage({
+        token: token,
+        chat_id: message.chat.id,
+        text: "If you sent me a tiktok link but I didn't send you the video, it may be because the video is larger " +
+            "than 20 megabytes (telegram bot api does not support uploading videos larger than 20 megabytes) or " +
+            "telegram api failed to upload your video (you can try again)."
+    });
+}
+
+const COMMANDS = {
+    "start": command_start,
+    "help": command_help
+}
+
+async function messageHandler(token, message) {
+    await ttHandler(token, message);
+    for(let entity of message["entities"]) {
+        if(entity["type"] === "bot_command") {
+            let commandName = message.text.substring(entity["offset"], entity["offset"] + entity["length"]);
+            commandName = commandName.split("@")[0].replaceAll("/", "");
+            if(typeof COMMANDS[commandName] === "function")
+                await COMMANDS[commandName](token, message);
+        }
+    }
+}
+
 async function handleRequest(request, env, ctx) {
     if (request.method !== "POST") {
         return new Response("", {status: 405});
@@ -144,6 +179,6 @@ async function handleRequest(request, env, ctx) {
         return new Response("", {status: 401});
     }
 
-    ctx.waitUntil(ttHandler(req.bot_token, json.message));
+    ctx.waitUntil(messageHandler(req.bot_token, json.message));
     return new Response("");
 }
